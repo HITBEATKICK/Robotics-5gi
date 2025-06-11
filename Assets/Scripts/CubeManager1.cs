@@ -6,9 +6,10 @@ using System.Collections;
 // CylinderA -> B -> C -> D 순으로 이동한다.
 // 속성: Cube의 속도, 타겟들
 
-public class CubeManager : MonoBehaviour
+public class CubeManager1 : MonoBehaviour
 {
     public float speed = 10;
+    public float interval = 1;
     public GameObject cube;
     public GameObject cube1;
     public GameObject cube2;
@@ -32,27 +33,27 @@ public class CubeManager : MonoBehaviour
     IEnumerator CoStart()
     {
         print("cube 시작"); // 반복문 사용 Cube 운행
-        yield return MoveCubeToTargets(cube, targets);
+        StartCoroutine(MoveCubeToTargets(cube, targets));
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(interval);
 
         print("cube2 시작"); // Cube1 운행
-        yield return MoveCubeToTargets(cube1, targets);
+        StartCoroutine(MoveCubeToTargets(cube, targets));
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(interval);
 
         print("cube3 시작"); // Cube2 운행
-        yield return MoveCubeToTargets(cube2, targets);
+        StartCoroutine(MoveCubeToTargets(cube, targets));
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(interval);
 
         print("cube4 시작"); // Cube3 운행
-        yield return MoveCubeToTargets(cube3, targets);
+        StartCoroutine(MoveCubeToTargets(cube, targets));
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(interval);
 
         print("cube5 시작"); // Cube4 운행
-        yield return MoveCubeToTargets(cube4, targets);
+        StartCoroutine(MoveCubeToTargets(cube, targets));
 
     }
 
