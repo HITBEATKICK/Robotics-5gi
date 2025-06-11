@@ -1,53 +1,59 @@
-using System.Reflection;
+using System;
 using UnityEngine;
 
-// Cube를 CylA -> CylB -> CylC -> CylD 로 순차적으로 이동 
-// 속성: 물체의 속도, 실린더 배열
-public class MovementEx2 : MonoBehaviour
+// 큐브를 CylinderA -> CylinderB 로 이동시킨다.
+// 속성: 물체의 속도, 시작점, 목적지
+public class MovementEX2 : MonoBehaviour
 {
     [SerializeField] private float speed;
-    public GameObject[] targets;
-    private int index;
+    public float Speed { get; set; }
+    public GameObject cylinderA;
+    public GameObject cylinderB;
+    public bool directionAB = true;
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        // targets[0] -> targets[1] -> targets[2] -> targets[3] 
-        MoveAtoB(transform.gameObject, targets[index]);
+        MoveAtoB(transform.gameObject, cylinderB, cylinderA);
     }
 
-    private void MoveAtoB(GameObject start, GameObject end)
+    private void MoveAtoB(GameObject Player, GameObject B, GameObject A)
     {
-        // 1. A에서 B를 향하는 벡터 -> 단위벡터(크기가 1인 벡터) -> 플레이어에게 단위벡터를 더해줌
-        Vector3 direction = end.transform.position - start.transform.position;
-        // 2. 단위벡터(크기가 1인 벡터)
-        Vector3 normalizedDir = direction.normalized;
-
-        // 3. 거리계산
-        float distance = Vector3.Magnitude(direction);
-        // 어디까지 갈 것인가? cylinderB 까지 -> 거리
-        // print(distance);
-
-        if (distance < 0.1f)
+        if (directionAB == true)
         {
-            index++;
+            Vector3 direction = B.transform.position - Player.transform.position;
+            Vector3 normalizedDir = direction.normalized;
 
-            if (index == targets.Length)
+            float distance = direction.magnitude;
+
+            if (distance < 0.1f)
             {
-                index = 0;
-                return;
+                directionAB = false;
             }
 
-            return;
+            transform.position += normalizedDir * speed * Time.deltaTime;
+        }
+        else
+        {
+            Vector3 direction = A.transform.position - Player.transform.position;
+            Vector3 normalizedDir = direction.normalized;
+
+            float distance = direction.magnitude;
+
+            if (distance < 0.1f)
+            {
+                directionAB = true;
+            }
+
+            transform.position += normalizedDir * speed * Time.deltaTime;
         }
 
-        // 4. 플레이어에게 단위벡터를 더해줌
-        transform.position += normalizedDir * speed * Time.deltaTime;
     }
 }
