@@ -8,7 +8,11 @@ using System.Collections;
 
 public class CubeManager : MonoBehaviour
 {
+<<<<<<< HEAD
     public float speed = 10;
+=======
+    public float speed;
+>>>>>>> 5ca0558dc9de3ef98b8fc5c8afee524890dc2298
     public GameObject cube;
     public GameObject cube1;
     public GameObject cube2;
@@ -62,7 +66,11 @@ public class CubeManager : MonoBehaviour
 
         print(cube.gameObject.name + "출발!");
 
+<<<<<<< HEAD
         while (true)
+=======
+        while(true)
+>>>>>>> 5ca0558dc9de3ef98b8fc5c8afee524890dc2298
         {
             // 1. A에서 B를 향하는 벡터 -> 단위벡터(크기가 1인 벡터) -> 플레이어에게 단위벡터를 더해줌
             Vector3 direction = targets[index].transform.position - cube.transform.position;
@@ -72,7 +80,11 @@ public class CubeManager : MonoBehaviour
             // 3. 거리계산
             float distance = Vector3.Magnitude(direction);
             // 어디까지 갈 것인가? cylinderB 까지 -> 거리
+<<<<<<< HEAD
             print(distance);
+=======
+            // print(distance);
+>>>>>>> 5ca0558dc9de3ef98b8fc5c8afee524890dc2298
 
             if (distance < 0.1f)
             {
@@ -93,4 +105,8 @@ public class CubeManager : MonoBehaviour
 
         yield return null;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 5ca0558dc9de3ef98b8fc5c8afee524890dc2298
