@@ -1964,9 +1964,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: MxComponent, Assembly-CSharp
-        m_MethodName: OnPowerBtnClkEvent
+      - m_Target: {fileID: 1168601630}
+        m_TargetAssemblyTypeName: TCPClient, Assembly-CSharp
+        m_MethodName: OnPowerBtnToggle
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2666,9 +2666,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: MxComponent, Assembly-CSharp
-        m_MethodName: OnEStopBtnClkEvent
+      - m_Target: {fileID: 1168601630}
+        m_TargetAssemblyTypeName: TCPClient, Assembly-CSharp
+        m_MethodName: OnEStopBtnToggle
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8446,8 +8446,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 947572b796d96f146889a77716e248cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  request: 
-  response: 
   logTxt: {fileID: 682934599}
   cylinders:
   - {fileID: 726699711}
@@ -13946,9 +13944,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: MxComponent, Assembly-CSharp
-        m_MethodName: OnStopBtnClkEvent
+      - m_Target: {fileID: 1168601630}
+        m_TargetAssemblyTypeName: TCPClient, Assembly-CSharp
+        m_MethodName: OnStopBtnToggle
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

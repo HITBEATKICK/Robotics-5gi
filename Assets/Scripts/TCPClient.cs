@@ -1,20 +1,36 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading; // CancellationTokenì„ ìœ„í•´ ì¶”ê°€
 using System.Threading.Tasks;
 using TMPro;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
-// TCPSever(ÄÜ¼ÖÇÁ·Î±×·¥)¿Í ÇÔ²² »ç¿ëÇÏ´Â TCPClient
-// * ÁÖÀÇ»çÇ×:  TCPSever¸¦ ¸ÕÀú ÄÒ ÈÄ¿¡ ½ÇÇàÇØ ÁÖ¼¼¿ä.
+// TCPSever(ì½˜ì†”í”„ë¡œê·¸ë¨)ì™€ í•¨ê»˜ ì‚¬ìš©í•˜ëŠ” TCPClient
+// * ì£¼ì˜ì‚¬í•­:  TCPSeverë¥¼ ë¨¼ì € ì¼  í›„ì— ì‹¤í–‰í•´ ì£¼ì„¸ìš”.
 public class TCPClient : MonoBehaviour
 {
+    // ë„¤íŠ¸ì›Œí¬ í†µì‹ ì€ ë³„ë„ ìŠ¤ë ˆë“œ, Unity ì˜¤ë¸Œì íŠ¸ ì¡°ì‘ì€ ë©”ì¸ ìŠ¤ë ˆë“œì—ì„œ í•˜ë¯€ë¡œ
+    // ë‘ ìŠ¤ë ˆë“œ ê°„ì— ë°ì´í„°ë¥¼ ì•ˆì „í•˜ê²Œ ì£¼ê³ ë°›ê¸° ìœ„í•œ ì¥ì¹˜ê°€ í•„ìš”
+
+    // ë©”ì¸ ìŠ¤ë ˆë“œ(Update)ê°€ ìƒì„±í•˜ì—¬ ë„¤íŠ¸ì›Œí¬ ìŠ¤ë ˆë“œë¡œ ë³´ë‚¼ ìš”ì²­
+    private string _requestToSend = "";
+    // ë„¤íŠ¸ì›Œí¬ ìŠ¤ë ˆë“œê°€ ë°›ì€ ì‘ë‹µì„ ë©”ì¸ ìŠ¤ë ˆë“œë¡œ ì „ë‹¬í•˜ê¸° ìœ„í•œ ë³€ìˆ˜
+    private string _lastReceivedResponse = null;
+    // ìœ„ ë³€ìˆ˜ë“¤ì— ë™ì‹œ ì ‘ê·¼í•˜ëŠ” ê²ƒì„ ë§‰ê¸° ìœ„í•œ ì ê¸ˆ ê°ì²´
+    private readonly object _lock = new object();
+
+    // í†µì‹  ê´€ë ¨ ê°ì²´ë“¤
+    private TcpClient _client;
+    private NetworkStream _stream;
+    private CancellationTokenSource _cts;
+    private Task _communicationTask;
+
     TcpClient client;
     NetworkStream stream;
-    public string request; // "Connect", "Disconnect", "Request,read,X0,1", "Request,write,X0,1"
-    public string response; // "read,X10,1,36", "Connected", "Disconnected", "Fail"
 
     [SerializeField] TMP_Text logTxt;
     bool isConnected;
@@ -22,203 +38,323 @@ public class TCPClient : MonoBehaviour
     bool isStopCliked;
     bool isEStopCliked;
 
-    const string X_START_UNITY2PLC = "X0";  // UnityÀÇ ¹öÆ° Á¤º¸¸¦ PLC·Î º¸³»´Â ½ÃÀÛ Xµğ¹ÙÀÌ½º Æ÷ÀÎÆ® ÁÖ¼Ò
-    const string X_START_PLC2UNITY = "X10"; // PLCÀÇ ¼¾¼­ Á¤º¸¸¦ Unity·Î º¸³»´Â ½ÃÀÛ Xµğ¹ÙÀÌ½º Æ÷ÀÎÆ® ÁÖ¼Ò
-    const string Y_START_PLC2UNITY = "Y0";  // PLCÀÇ ¼¾¼­ Á¤º¸¸¦ Unity·Î º¸³»´Â ½ÃÀÛ Yµğ¹ÙÀÌ½º Æ÷ÀÎÆ® ÁÖ¼Ò
-    const int X_BLOCKCNT_UNITY2PLC = 1;     // UnityÀÇ ¹öÆ° Á¤º¸¸¦ PLC·Î º¸³»´Â Xµğ¹ÙÀÌ½º ºí·Ï °³¼ö
-    const int X_BLOCKCNT_PLC2UNITY = 1;     // PLCÀÇ ¼¾¼­ Á¤º¸¸¦ Unity·Î º¸³»´Â Xµğ¹ÙÀÌ½º ºí·Ï °³¼ö
-    const int Y_BLOCKCNT_PLC2UNITY = 1;     // PLCÀÇ ¼³ºñ Á¤º¸¸¦ Unity·Î º¸³»´Â Yµğ¹ÙÀÌ½º ºí·Ï °³¼ö
+    const string X_START_UNITY2PLC = "X0";
+    const string X_START_PLC2UNITY = "X10";
+    const string Y_START_PLC2UNITY = "Y0";
+    const int X_BLOCKCNT_UNITY2PLC = 1;
+    const int X_BLOCKCNT_PLC2UNITY = 1;
+    const int Y_BLOCKCNT_PLC2UNITY = 1;
 
-    [Header("Yµğ¹ÙÀÌ½º¿ë")]
+    [Header("Yë””ë°”ì´ìŠ¤ìš©")]
     public List<Cylinder> cylinders;
     public Conveyor conveyor;
     public TowerManager towerManager;
 
-    [Header("Xµğ¹ÙÀÌ½º¿ë")]
-    public Sensor ±ÙÁ¢¼¾¼­;
-    public Sensor ±İ¼Ó¼¾¼­;
+    [Header("Xë””ë°”ì´ìŠ¤ìš©")]
+    public Sensor ê·¼ì ‘ì„¼ì„œ;
+    public Sensor ê¸ˆì†ì„¼ì„œ;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
     void Start()
     {
-        Task.Run(() => InitializeClient()); // µ¥ÀÌÅÍ Àü¼Û¿ë ½º·¹µå
+
     }
 
+    // ì—°ê²° ì‹œì‘ 
+    private void StartConnection()
+    {
+        // ì´ë¯¸ ì—°ê²° ì‹œë„ ì¤‘ì´ê±°ë‚˜ ì—°ê²°ëœ ìƒíƒœë©´ ì¤‘ë³µ ì‹¤í–‰ ë°©ì§€
+        if (_communicationTask != null && !_communicationTask.IsCompleted)
+        {
+            Debug.LogWarning("ì´ë¯¸ ì—°ê²° í”„ë¡œì„¸ìŠ¤ê°€ ì§„í–‰ ì¤‘ì…ë‹ˆë‹¤.");
+            return;
+        }
 
-    // µ¥ÀÌÅÍ ÃëÇÕ¿ë Lifecycle ÇÔ¼ö(Unity main ½º·¹µå)
+        // ìƒˆë¡œìš´ CancellationTokenSourceì™€ Taskë¥¼ ìƒì„±
+        _cts = new CancellationTokenSource();
+        _communicationTask = Task.Run(() => InitializeClient(_cts.Token));
+    }
+
+    // ì—°ê²° í•´ì œ
+    private void StopConnection()
+    {
+        // ì´ë¯¸ ì—°ê²°ì´ ëŠê²¼ê±°ë‚˜ í•´ì œ ê³¼ì • ì¤‘ì´ë©´ ì¤‘ë³µ ì‹¤í–‰ ë°©ì§€
+        if (!isConnected && (_communicationTask == null || _communicationTask.IsCompleted))
+        {
+            return;
+        }
+
+        // 1. isConnected í”Œë˜ê·¸ë¥¼ ë¨¼ì € falseë¡œ ì„¤ì •í•˜ì—¬ Update ë£¨í”„ì˜ ìš”ì²­ ìƒì„±ì„ ì¤‘ë‹¨
+        isConnected = false;
+
+        // 2. ì„œë²„ì— "Disconnect" ë©”ì‹œì§€ë¥¼ ë³´ë‚´ë‹¬ë¼ê³  ìš”ì²­
+        //    ë„¤íŠ¸ì›Œí¬ ìŠ¤ë ˆë“œê°€ ì´ ìš”ì²­ì„ ì²˜ë¦¬í•  ê²ƒì„
+        lock (_lock)
+        {
+            _requestToSend = "Disconnect";
+        }
+
+        // 3. ì ì‹œ ê¸°ë‹¤ë¦° í›„(ë©”ì‹œì§€ê°€ ì „ì†¡ë  ì‹œê°„ í™•ë³´), Task ì·¨ì†Œ
+        //    Task.Runì„ ì‚¬ìš©í•˜ì—¬ í˜„ì¬ ìŠ¤ë ˆë“œ(ë©”ì¸ ìŠ¤ë ˆë“œ)ë¥¼ ë§‰ì§€ ì•ŠìŒ
+        Task.Run(async () =>
+        {
+            // 100ms ì •ë„ë©´ ë©”ì‹œì§€ë¥¼ ë³´ë‚´ê¸°ì— ì¶©ë¶„í•œ ì‹œê°„
+            await Task.Delay(100);
+
+            // 4. ì‹¤í–‰ ì¤‘ì¸ Taskê°€ ìˆìœ¼ë©´ ì·¨ì†Œ ì‹ í˜¸ë¥¼ ë³´ëƒ„
+            if (_cts != null && !_cts.IsCancellationRequested)
+            {
+                _cts.Cancel();
+            }
+        });
+    }
+
     private void Update()
     {
-        // 1. Unity -> TCPServer·Î µ¥ÀÌÅÍ ¿äÃ»
-        RequestData(out request);
+        // 1. (ë©”ì¸ ìŠ¤ë ˆë“œ) ë„¤íŠ¸ì›Œí¬ë¡œ ë³´ë‚¼ ìš”ì²­ ë¬¸ìì—´ ìƒì„±
+        if (isConnected)
+        {
+            // isPowerOnCliked ê°™ì€ UI ìƒíƒœë¥¼ ë°”íƒ•ìœ¼ë¡œ ìš”ì²­ ë¬¸ìì—´ì„ ë§Œë“¦
+            RequestData(out string newRequest);
+            // lockì„ ì‚¬ìš©í•´ ë„¤íŠ¸ì›Œí¬ ìŠ¤ë ˆë“œê°€ ì‚¬ìš©í•  ë³€ìˆ˜ì— ì•ˆì „í•˜ê²Œ í• ë‹¹
+            lock (_lock)
+            {
+                _requestToSend = newRequest;
+            }
+        }
 
-        // 2. TCPServer -> Unity ¼³ºñ·Î Àû¿ë
-        //ResponseData(ref response);
+        // 2. (ë©”ì¸ ìŠ¤ë ˆë“œ) ë„¤íŠ¸ì›Œí¬ ìŠ¤ë ˆë“œê°€ ë°›ì•„ì˜¨ ì‘ë‹µì´ ìˆëŠ”ì§€ í™•ì¸í•˜ê³  ì²˜ë¦¬
+        string responseToProcess = null;
+        lock (_lock)
+        {
+            if (_lastReceivedResponse != null)
+            {
+                responseToProcess = _lastReceivedResponse;
+                _lastReceivedResponse = null; // ì‘ë‹µì„ ê°€ì ¸ì™”ìœ¼ë‹ˆ ë¹„ì›Œì¤Œ (ë‹¤ìŒì— ë˜ ì²˜ë¦¬í•˜ì§€ ì•Šë„ë¡)
+            }
+        }
+
+        // ì²˜ë¦¬í•  ì‘ë‹µì´ ìˆë‹¤ë©´, ResponseData í•¨ìˆ˜ í˜¸ì¶œ
+        if (responseToProcess != null)
+        {
+            ResponseData(responseToProcess);
+        }
     }
 
-    // ÀÀ´ä¹ŞÀº Á¤º¸¸¦ ¼³ºñ¿¡ Àû¿ë
-    // Connected, Disconnected, read,x10,1,255,read,y0,1,255
-    private void ResponseData(ref string response)
+    private void ResponseData(string response)
     {
-        if (response.Contains("Connected") || response.Contains("Disonnected")) 
-            return;
+        if (string.IsNullOrEmpty(response)) return;
 
-        if(isConnected)
+        // "Connected", "Disconnected" ê°™ì€ ìƒíƒœ ë©”ì‹œì§€ ì²˜ë¦¬
+        if (response.Contains("Connected") || response.Contains("Disconnected"))
+        {
+            if (logTxt != null) logTxt.text = response;
+            return;
+        }
+
+        if (logTxt != null) logTxt.text = $"Received: {response}";
+
+        if (isConnected)
         {
             string[] splited = response.Split(',');
-            
-            // 1. ¹®ÀÚ¿­ -> ¼ıÀÚ ¹è¿­
-            string xData = splited[3]; // 25 -> 10010
-            string yData = splited[7];
+            string xData = "0";
+            string yData = "0";
 
-            int xInt = 0;
-            bool isXInt = int.TryParse(xData, out xInt);
+            for (int i = 0; i < splited.Length; i++)
+            {
+                if (splited[i].Equals("Read", StringComparison.OrdinalIgnoreCase))
+                {
+                    string address = splited[i + 1];
+                    if (address.StartsWith("X")) xData = splited[i + 3].Trim();
+                    else if (address.StartsWith("Y")) yData = splited[i + 3].Trim();
+                }
+            }
 
-            if (!isXInt) return;
+            if (!int.TryParse(xData, out int xInt)) return;
+            if (!int.TryParse(yData, out int yInt)) return;
 
-            int yInt = 0;
-            bool isYInt = int.TryParse(yData, out yInt);
+            string[] binaries = ConvertDecimalToBinary(new int[] { xInt, yInt });
+            string binaryX = binaries[0];
+            string binaryY = binaries[1];
 
-            if (!isYInt) return;
+            // xDevice ì •ë³´ PLC -> UNITY
+            cylinders[0].isFrontLimitSWON = binaryX[0] == '1';
+            cylinders[0].isFrontLimitSWON = binaryX[0] == '1';
+            cylinders[0].isBackLimitSWON  = binaryX[1] == '1';
+            cylinders[1].isFrontLimitSWON = binaryX[2] == '1';
+            cylinders[1].isBackLimitSWON  = binaryX[3] == '1';
+            cylinders[2].isFrontLimitSWON = binaryX[4] == '1';
+            cylinders[2].isBackLimitSWON  = binaryX[5] == '1';
+            cylinders[3].isFrontLimitSWON = binaryX[6] == '1';
+            cylinders[3].isBackLimitSWON  = binaryX[7] == '1';
+            ê·¼ì ‘ì„¼ì„œ.isActive             = binaryX[8] == '1';
+            ê¸ˆì†ì„¼ì„œ.isActive             = binaryX[9] == '1';
 
-            int[] result = { xInt, yInt };
-
-            // 2. ¼ıÀÚ ¹è¿­ { 35, 100 } -> ¹®ÀÚ ¹è¿­ { 01000110000001101, 01000110000001101 }
-            string[] binaries = ConvertDecimalToBinary(result);
-
-            xData = binaries[0];
-            yData = binaries[1];
-
-            // xDevice Á¤º¸ PLC -> UNITY
-            cylinders[0].isFrontLimitSWON = xData[0] is '1' ? true : false;
-            cylinders[0].isBackLimitSWON  = xData[1] is '1' ? true : false;
-            cylinders[1].isFrontLimitSWON = xData[2] is '1' ? true : false;
-            cylinders[1].isBackLimitSWON  = xData[3] is '1' ? true : false;
-            cylinders[2].isFrontLimitSWON = xData[4] is '1' ? true : false;
-            cylinders[2].isBackLimitSWON  = xData[5] is '1' ? true : false;
-            cylinders[3].isFrontLimitSWON = xData[6] is '1' ? true : false;
-            cylinders[3].isBackLimitSWON  = xData[7] is '1' ? true : false;
-            ±ÙÁ¢¼¾¼­.isActive             = xData[8] is '1' ? true : false;
-            ±İ¼Ó¼¾¼­.isActive             = xData[9] is '1' ? true : false;
-
-            // yDevice Á¤º¸ PLC -> UNITY
-            cylinders[0].isForward        = yData[0] is '1' ? true : false;
-            cylinders[0].isBackward       = yData[1] is '1' ? true : false;
-            cylinders[1].isForward        = yData[2] is '1' ? true : false;
-            cylinders[1].isBackward       = yData[3] is '1' ? true : false;
-            cylinders[2].isForward        = yData[4] is '1' ? true : false;
-            cylinders[2].isBackward       = yData[5] is '1' ? true : false;
-            cylinders[3].isForward        = yData[6] is '1' ? true : false;
-            cylinders[3].isBackward       = yData[7] is '1' ? true : false;
-            conveyor.isCW                 = yData[8] is '1' ? true : false;
-            conveyor.isCCW                = yData[9] is '1' ? true : false;
-            towerManager.isRedLampOn      = yData[10] is '1' ? true : false;
-            towerManager.isYellowLampOn   = yData[11] is '1' ? true : false;
-            towerManager.isGreenLampOn    = yData[12] is '1' ? true : false;
+            // yDevice ì •ë³´ PLC -> UNITY
+            cylinders[0].isForward = binaryY[0] == '1';
+            cylinders[0].isBackward = binaryY[1] == '1';
+            cylinders[1].isForward = binaryY[2] == '1';
+            cylinders[1].isBackward = binaryY[3] == '1';
+            cylinders[2].isForward = binaryY[4] == '1';
+            cylinders[2].isBackward = binaryY[5] == '1';
+            cylinders[3].isForward = binaryY[6] == '1';
+            cylinders[3].isBackward = binaryY[7] == '1';
+            conveyor.isCW = binaryY[8] == '1';
+            conveyor.isCCW = binaryY[9] == '1';
+            towerManager.isRedLampOn = binaryY[10] == '1';
+            towerManager.isYellowLampOn = binaryY[11] == '1';
+            towerManager.isGreenLampOn = binaryY[12] == '1';
         }
     }
 
-    // { 336, 55 } -> { 0001110011100000, 0001110011100000 }
     private string[] ConvertDecimalToBinary(int[] data)
     {
+        // ì´ í•¨ìˆ˜ëŠ” ìˆ˜ì •í•  í•„ìš” ì—†ìŒ (ê¸°ì¡´ê³¼ ë™ì¼)
         string[] result = new string[data.Length];
-
         for (int i = 0; i < data.Length; i++)
         {
-            // 1. 10Áø¼ö 336 -> 2Áø¼ö 101010000
             string binary = Convert.ToString(data[i], 2);
-
-            // 2. ³¯¾Æ°£ »óÀ§ºñÆ® Ãß°¡ 1/0101/0000 -> 0000/0010/1010/0000
-            int upBitCnt = 16 - binary.Length;
-
-            // 3. ¸®¹ö½º(ÇÏÀ§ºñÆ® ÀÎµ¦½º ºÎÅÍ »ç¿ë) 1/0101/0000 -> 0000/1010/1
             string reversedBinary = new string(binary.Reverse().ToArray());
-
-            // 4. »óÀ§ºñÆ® ºÙÀÌ±â 0000/1010/1 + 000/0000 = 0000/1010/1000/0000
-            for (int j = 0; j < upBitCnt; j++)
-            {
-                reversedBinary += "0";
-            }
-
+            reversedBinary = reversedBinary.PadRight(16, '0');
             result[i] = reversedBinary;
         }
-
         return result;
     }
 
-
-    // µ¥ÀÌÅÍ ¿äÃ» Çü½Ä: "Request,read,X10,1,Y0,1,write,X0,1,25"
     private void RequestData(out string request)
     {
-        if(isConnected)
-        {
-            // 1. Xµğ¹ÙÀÌ½º ÀĞ±â
-            request = $"Request,read,{X_START_PLC2UNITY},{X_BLOCKCNT_PLC2UNITY},";
+        // ì´ í•¨ìˆ˜ëŠ” ìˆ˜ì •í•  í•„ìš” ì—†ìŒ (ê¸°ì¡´ê³¼ ë™ì¼)
+        string readX = $"read,{X_START_PLC2UNITY},{X_BLOCKCNT_PLC2UNITY}";
+        string readY = $"read,{Y_START_PLC2UNITY},{Y_BLOCKCNT_PLC2UNITY}";
 
-            // 2. Yµğ¹ÙÀÌ½º ÀĞ±â
-            request += $"{Y_START_PLC2UNITY},{Y_BLOCKCNT_PLC2UNITY}";
+        char power = (isPowerOnCliked ? '1' : '0');
+        char stop = (isStopCliked ? '1' : '0');
+        char eStop = (isEStopCliked ? '1' : '0');
+        string binaryStr = $"{eStop}{stop}{power}";
+        int decimalX = Convert.ToInt32(binaryStr, 2);
+        string writeX = $"write,{X_START_UNITY2PLC},{X_BLOCKCNT_UNITY2PLC},{decimalX}";
 
-            // 3. Xµğ¹ÙÀÌ½º ¾²±â
-            // Àü¿ø, Á¤Áö, ±ä±ŞÁ¤Áö Á¤º¸¸¦ Ã¹¹øÂ° ºí·Ï¿¡ Àü´Ş(010 -> Á¤¼öÇü 2)
-            char power = (isPowerOnCliked == true ? '1' : '0');
-            char stop =  (isStopCliked    == true ? '1' : '0');
-            char eStop = (isEStopCliked   == true ? '1' : '0');
-            string binaryStr = $"{eStop}{stop}{power}"; // "010"
-            int decimalX = Convert.ToInt32(binaryStr, 2);
-            request += $",{X_START_UNITY2PLC},{X_BLOCKCNT_UNITY2PLC},{decimalX}";
-        }
-        else
-        {
-            request = "";
-        }
+        request = $"Request,{readX},{readY},{writeX}";
     }
 
-    async Task InitializeClient()
+
+    async Task InitializeClient(CancellationToken token)
     {
-        client = new TcpClient();
-
-        await client.ConnectAsync("127.0.0.1", 12345);
-
-        print("¼­¹ö¿¡ ¿¬°áµÇ¾ú½À´Ï´Ù.");
-
-        stream = client.GetStream();
-
-        // ¿¬°á, ¿¬°áÇØÁ¦ ¹öÆ° Å¬¸¯½Ã µ¥ÀÌÅÍ Àü¼Û
-        // "Connect", "Disconnect", "read,X0,1", "write,x0,1,255"
-        while(true)
+        try
         {
-            if(request.Length != 0)
+            // [ì¤‘ìš”] í•­ìƒ ìƒˆë¡œìš´ TcpClient ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±
+            _client = new TcpClient();
+            await _client.ConnectAsync("127.0.0.1", 12345);
+            _stream = _client.GetStream();
+
+            Debug.Log("ì„œë²„ì— ì—°ê²°ë˜ì—ˆìŠµë‹ˆë‹¤.");
+            isConnected = true; // ì—°ê²° ì„±ê³µ ì‹œ í”Œë˜ê·¸ ì„¤ì •
+
+            // --- Connect ìš”ì²­ì„ í•œ ë²ˆ ë³´ëƒ„ (ì„œë²„ì— ì—°ê²° ì‚¬ì‹¤ ì•Œë¦¼) ---
+            byte[] connectMsg = Encoding.UTF8.GetBytes("Connect");
+            await _stream.WriteAsync(connectMsg, 0, connectMsg.Length, token);
+            // ì„œë²„ë¡œë¶€í„° "Connected" ì‘ë‹µì„ ê¸°ë‹¤ë¦¬ê³  ì²˜ë¦¬í•  ìˆ˜ ìˆìŒ (ì„ íƒì )
+
+            while (!token.IsCancellationRequested)
             {
-                byte[] data = Encoding.UTF8.GetBytes(request);
+                string currentRequest = null;
+                lock (_lock) { currentRequest = _requestToSend; }
 
-                await stream.WriteAsync(data, 0, data.Length);
-
-                byte[] buffer = new byte[1024];
-                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-                print(response);
-
-                if(response.Contains("Connected"))
+                if (!string.IsNullOrEmpty(currentRequest))
                 {
-                    isConnected = true;
+                    byte[] data = Encoding.UTF8.GetBytes(currentRequest);
+                    await _stream.WriteAsync(data, 0, data.Length, token);
+
+                    byte[] buffer = new byte[1024];
+                    int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length, token);
+
+                    if (bytesRead == 0)
+                    {
+                        Debug.Log("ì„œë²„ê°€ ì—°ê²°ì„ ì¢…ë£Œí–ˆìŠµë‹ˆë‹¤.");
+                        break;
+                    }
+
+                    string receivedResponse = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    lock (_lock) { _lastReceivedResponse = receivedResponse; }
+
+                    if (receivedResponse.Contains("Disconnected"))
+                    {
+                        Debug.Log("ì„œë²„ë¡œë¶€í„° ì—°ê²° í•´ì œ ì‘ë‹µì„ ë°›ì•˜ìŠµë‹ˆë‹¤.");
+                        break;
+                    }
+
+                    lock (_lock)
+                    {
+                        if (_requestToSend == "Disconnect") _requestToSend = "";
+                    }
                 }
-                else if(response.Contains("Disconnected"))
-                {
-                    isConnected = false;
-                }
+                await Task.Delay(50, token);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Debug.Log("í†µì‹  Taskê°€ ì •ìƒì ìœ¼ë¡œ ì·¨ì†Œë˜ì—ˆìŠµë‹ˆë‹¤.");
+        }
+        catch (SocketException se)
+        {
+            Debug.LogError($"ì†Œì¼“ ì—°ê²° ì‹¤íŒ¨: {se.Message}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"í†µì‹  ì¤‘ ì—ëŸ¬ ë°œìƒ: {e.Message}");
+        }
+        finally
+        {
+            // finally ë¸”ë¡ì—ì„œëŠ” ìƒíƒœ ì •ë¦¬ì™€ ìì› í•´ì œì—ë§Œ ì§‘ì¤‘
+            isConnected = false;
+
+            _stream?.Close();
+            _client?.Close();
+            _cts?.Dispose();
+
+            // ì°¸ì¡°ë¥¼ nullë¡œ ì„¤ì •í•˜ì—¬ ê°€ë¹„ì§€ ì»¬ë ‰ì…˜ì´ ì‰½ê²Œ ì²˜ë¦¬í•˜ë„ë¡ í•¨
+            _cts = null;
+            _stream = null;
+            _client = null;
+            _communicationTask = null; // Taskë„ ì •ë¦¬
+
+            Debug.Log("í´ë¼ì´ì–¸íŠ¸ ìì›ì´ ëª¨ë‘ í•´ì œë˜ì—ˆìŠµë‹ˆë‹¤.");
         }
     }
 
     public void OnConnectBtnClkEvent()
     {
-        request = "Connect";
+        // ì—°ê²° ì‹œì‘ í•¨ìˆ˜ í˜¸ì¶œ
+        StartConnection();
     }
 
     public void OnDisconnectBtnClkEvent()
     {
-        isConnected = false;
+        // ì—°ê²° í•´ì œ í•¨ìˆ˜ í˜¸ì¶œ
+        StopConnection();
+    }
 
-        request = "Disconnect";
+    public void OnPowerBtnToggle()
+    {
+        isPowerOnCliked = !isPowerOnCliked;
+        // (ì„ íƒ ì‚¬í•­) ë²„íŠ¼ ìƒ‰ìƒ ë³€ê²½ ë“±ìœ¼ë¡œ ì‚¬ìš©ìì—ê²Œ ìƒíƒœë¥¼ ì‹œê°ì ìœ¼ë¡œ ì•Œë ¤ì£¼ë©´ ì¢‹ìŠµë‹ˆë‹¤.
+        Debug.Log($"Power Button Toggled: {isPowerOnCliked}");
+    }
+
+    public void OnStopBtnToggle()
+    {
+        isStopCliked = !isStopCliked;
+        Debug.Log($"Stop Button Toggled: {isStopCliked}");
+    }
+
+    public void OnEStopBtnToggle()
+    {
+        isEStopCliked = !isEStopCliked;
+        Debug.Log($"E-Stop Button Toggled: {isEStopCliked}");
+    }
+
+    private void OnDestroy()
+    {
+        StopConnection();
     }
 }
