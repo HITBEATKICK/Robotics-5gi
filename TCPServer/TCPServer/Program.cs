@@ -88,14 +88,31 @@ namespace TCPServer
             {
                 return Disconnect();
             }
-            else if (dataStr.Contains("Request,read")) // "Request,read,X10,1,write,X0,1,7"
+            // "Request,read,X10,1,Y0,1,write,X0,1,7"
+            // X10부터 1블록 데이터를 읽고 싶다. & Y0부터 1블록 데이터를 읽고 싶다. & X0부터 1블록에 7이라는 정보를 쓰고 싶다.
+            // 최종 데이터(TCPServer -> Unity) ->  read,x10,1,255,read,y0,1,255
+            else if (dataStr.Contains("Request,read")) // "Request,read,X10,1,Y0,1,write,X0,1,7"
             {
-                return ReadDeviceBlock(dataStr);
+                // 1. X10부터 1블록 데이터를 읽고 싶다.
+                string xDevice = ReadDeviceBlock(dataStr); // read,x10,1,255
+
+                // 2. Y0부터 1블록 데이터를 읽고 싶다. 
+                int indexY = dataStr.IndexOf("Y");
+                string requestY = $"Request,{dataStr.Substring(indexY, 2)}";
+                string yDevice = ReadDeviceBlock(requestY); // read,y0,1,255
+
+                // 3. X0부터 1블록에 7이라는 정보를 쓰고 싶다.
+                int indexToWrite = dataStr.IndexOf("write");
+                string writeRet = $"Request,{dataStr.Substring(indexToWrite, dataStr.Length - indexToWrite)}"; 
+
+                WriteDeviceBlock(writeRet); // write,x1,1,7
+
+                return xDevice + writeRet; // read,x10,1,255,read,y0,1,255
             }
-            else if(dataStr.Contains("Request,write"))
-            {
-                return WriteDeviceBlock(dataStr);
-            }
+            //else if(dataStr.Contains("Request,write"))
+            //{
+            //    return WriteDeviceBlock(dataStr);
+            //}
             else
             {
                 return "Fail";

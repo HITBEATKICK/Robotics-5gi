@@ -15,7 +15,6 @@ public class TCPClient : MonoBehaviour
     NetworkStream stream;
     public string request; // "Connect", "Disconnect", "Request,read,X0,1", "Request,write,X0,1"
     public string response; // "read,X10,1,36", "Connected", "Disconnected", "Fail"
-    byte[] buffer = new byte[1024];
 
     [SerializeField] TMP_Text logTxt;
     bool isConnected;
@@ -53,20 +52,23 @@ public class TCPClient : MonoBehaviour
         RequestData(out request);
 
         // 2. TCPServer -> Unity 설비로 적용
-        ResponseData(ref response);
+        //ResponseData(ref response);
     }
 
     // 응답받은 정보를 설비에 적용
-    // Connected, Disconnected, read,x0,1,25,y0,1,25
+    // Connected, Disconnected, read,x10,1,255,read,y0,1,255
     private void ResponseData(ref string response)
     {
+        if (response.Contains("Connected") || response.Contains("Disonnected")) 
+            return;
+
         if(isConnected)
         {
             string[] splited = response.Split(',');
             
             // 1. 문자열 -> 숫자 배열
             string xData = splited[3]; // 25 -> 10010
-            string yData = splited[6];
+            string yData = splited[7];
 
             int xInt = 0;
             bool isXInt = int.TryParse(xData, out xInt);
@@ -150,7 +152,7 @@ public class TCPClient : MonoBehaviour
         if(isConnected)
         {
             // 1. X디바이스 읽기
-            request = $"Request,read,{X_START_PLC2UNITY},{X_BLOCKCNT_UNITY2PLC},";
+            request = $"Request,read,{X_START_PLC2UNITY},{X_BLOCKCNT_PLC2UNITY},";
 
             // 2. Y디바이스 읽기
             request += $"{Y_START_PLC2UNITY},{Y_BLOCKCNT_PLC2UNITY}";
@@ -190,6 +192,7 @@ public class TCPClient : MonoBehaviour
 
                 await stream.WriteAsync(data, 0, data.Length);
 
+                byte[] buffer = new byte[1024];
                 int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                 response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
