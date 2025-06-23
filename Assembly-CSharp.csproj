@@ -66,6 +66,7 @@
     <Compile Include="Assets\Scripts\CubeManager.cs" />
     <Compile Include="Assets\Scripts\Sensor.cs" />
     <Compile Include="Assets\Scripts\AudioManager.cs" />
+    <Compile Include="Assets\Scripts\TCPClient.cs" />
     <Compile Include="Assets\Scripts\MovementEx.cs" />
     <Compile Include="Assets\Scripts\Conveyor.cs" />
     <Compile Include="Assets\Scripts\RayCamera.cs" />

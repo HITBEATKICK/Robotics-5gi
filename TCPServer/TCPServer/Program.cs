@@ -15,10 +15,11 @@ namespace TCPServer
         static ActUtlType64 mxComponent;
         static State state;
 
+        // 1:N 비동기통신
         static async Task Main()
         {
             // 콘솔 프로그램 종료 이벤트 등록
-            Console.CancelKeyPress += new ConsoleCancelEventHandler(ExitHandler);
+            //Console.CancelKeyPress += new ConsoleCancelEventHandler(ExitHandler);
 
             // MxComponent 초기설정
             mxComponent = new ActUtlType64();
@@ -27,7 +28,8 @@ namespace TCPServer
 
             //SyncUpdate();
             // 1. 서버 객체 선언
-            TcpListener server = new TcpListener(IPAddress.Any, 12345);
+            IPAddress addr = IPAddress.Parse("127.0.0.1");
+            TcpListener server = new TcpListener(addr, 12345);
 
             // 2. 서버 실행
             server.Start();
@@ -56,9 +58,9 @@ namespace TCPServer
             // 클라이언트가 보낸 데이터를 계속 읽음
             // <Unity 클라이언트가 보낸 데이터 형식>
             // 1. PLC 연결: "Connect" -> MxComponent.Open()
-            // 2. PLC 연결해지: "DisConnect" -> MxComponent.Close()
+            // 2. PLC 연결해지: "Disconnect" -> MxComponent.Close()
             // 3. 데이터 요청: "Request,read,X0,2" -> MxComponent.ReadDeviceBlock(X0, 2, out data[0]);
-            //                 "Request,write,X10,1" -> MxComponent.ReadDeviceBlock(X10, 1, out data[0]);
+            //                 "Request,write,X10,1,240" -> MxComponent.ReadDeviceBlock(X10, 1, out data[0]);
             while((byteRead = await stream.ReadAsync(buffer, 0, buffer.Length)) != 0)
             {
                 // "Connect", "DisConnect", "Request,read,X0,2"
@@ -132,7 +134,7 @@ namespace TCPServer
             int iRet = mxComponent.WriteDeviceBlock(address, blockCnt, ref values[0]);
             if (iRet == 0)
             {
-                return $"Data written: {address}/{blockCnt}/{value}";
+                return $"Write,{address},{blockCnt},{value}";
             }
             else
             {
@@ -197,6 +199,7 @@ namespace TCPServer
             }
         }
 
+        // 1:1 동기통신용
         private static void SyncUpdate()
         {
             // 서버 소켓 생성 + 바인딩(특정 아이피와 포트할당)

@@ -40,6 +40,8 @@ namespace TCPClient
 
                 Console.WriteLine($"서버 응답: {response}");
             }
+
+            SyncUpdate();
         }
 
         private static void SyncUpdate()
