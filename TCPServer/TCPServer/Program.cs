@@ -88,7 +88,7 @@ namespace TCPServer
             {
                 return Disconnect();
             }
-            else if (dataStr.Contains("Request,read"))
+            else if (dataStr.Contains("Request,read")) // "Request,read,X10,1,write,X0,1,7"
             {
                 return ReadDeviceBlock(dataStr);
             }
@@ -144,7 +144,7 @@ namespace TCPServer
 
         private static string ReadDeviceBlock(string dataStr)
         {
-            // 문자열 파싱: "Request,read,X0,1" -> { Request, read, X0, 1 }
+            // 문자열 파싱: "Request,read,X0,1" -> { Request, read, X0, 1 }  -> { Request, read, X10, 1, write, X0, 1, 7}
             string[] data = dataStr.Split(",");
             string address = data[2];
             int blockCnt;

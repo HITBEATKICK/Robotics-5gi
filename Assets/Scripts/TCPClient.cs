@@ -150,7 +150,7 @@ public class TCPClient : MonoBehaviour
         if(isConnected)
         {
             // 1. X디바이스 읽기
-            request = $"Request,read,{X_BLOCKCNT_PLC2UNITY},{X_BLOCKCNT_UNITY2PLC},";
+            request = $"Request,read,{X_START_PLC2UNITY},{X_BLOCKCNT_UNITY2PLC},";
 
             // 2. Y디바이스 읽기
             request += $"{Y_START_PLC2UNITY},{Y_BLOCKCNT_PLC2UNITY}";
@@ -162,7 +162,7 @@ public class TCPClient : MonoBehaviour
             char eStop = (isEStopCliked   == true ? '1' : '0');
             string binaryStr = $"{eStop}{stop}{power}"; // "010"
             int decimalX = Convert.ToInt32(binaryStr, 2);
-            request += $",{X_BLOCKCNT_UNITY2PLC},{X_START_UNITY2PLC},{decimalX}";
+            request += $",{X_START_UNITY2PLC},{X_BLOCKCNT_UNITY2PLC},{decimalX}";
         }
         else
         {
@@ -214,6 +214,8 @@ public class TCPClient : MonoBehaviour
 
     public void OnDisconnectBtnClkEvent()
     {
+        isConnected = false;
+
         request = "Disconnect";
     }
 }
