@@ -72,6 +72,7 @@ public class TCPClient : MonoBehaviour
 
         // 새로운 CancellationTokenSource와 Task를 생성
         _cts = new CancellationTokenSource();
+        // 데이터 전송용 스레드 시작
         _communicationTask = Task.Run(() => InitializeClient(_cts.Token));
     }
 
@@ -191,19 +192,20 @@ public class TCPClient : MonoBehaviour
             금속센서.isActive             = binaryX[9] == '1';
 
             // yDevice 정보 PLC -> UNITY
-            cylinders[0].isForward = binaryY[0] == '1';
-            cylinders[0].isBackward = binaryY[1] == '1';
-            cylinders[1].isForward = binaryY[2] == '1';
-            cylinders[1].isBackward = binaryY[3] == '1';
-            cylinders[2].isForward = binaryY[4] == '1';
-            cylinders[2].isBackward = binaryY[5] == '1';
-            cylinders[3].isForward = binaryY[6] == '1';
-            cylinders[3].isBackward = binaryY[7] == '1';
-            conveyor.isCW = binaryY[8] == '1';
-            conveyor.isCCW = binaryY[9] == '1';
-            towerManager.isRedLampOn = binaryY[10] == '1';
-            towerManager.isYellowLampOn = binaryY[11] == '1';
-            towerManager.isGreenLampOn = binaryY[12] == '1';
+            cylinders[0].isForward        = binaryY[0] == '1';
+            cylinders[0].isBackward       = binaryY[1] == '1';
+            cylinders[1].isForward        = binaryY[2] == '1';
+            cylinders[1].isBackward       = binaryY[3] == '1';
+            cylinders[2].isForward        = binaryY[4] == '1';
+            cylinders[2].isBackward       = binaryY[5] == '1';
+            cylinders[3].isForward        = binaryY[6] == '1';
+            cylinders[3].isBackward       = binaryY[7] == '1';
+            conveyor.isCW                 = binaryY[8] == '1';
+            conveyor.isCCW                = binaryY[9] == '1';
+            towerManager.isRedLampOn      = binaryY[10] == '1';
+            towerManager.isYellowLampOn   = binaryY[11] == '1';
+            towerManager.isGreenLampOn    = binaryY[12] == '1';
+            UIController.instance.isRobotOn   = binaryY[13] == '1';
         }
     }
 
@@ -288,6 +290,8 @@ public class TCPClient : MonoBehaviour
                         if (_requestToSend == "Disconnect") _requestToSend = "";
                     }
                 }
+
+                // 송신 딜레이
                 await Task.Delay(50, token);
             }
         }

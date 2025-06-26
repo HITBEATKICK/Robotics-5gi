@@ -142,7 +142,7 @@ namespace TCPServer
             {
                 return Disconnect(); // 이 함수가 mxComponent.Close()를 호출함
             }
-            else if (dataStr.StartsWith("Request,"))
+            else if (dataStr.StartsWith("Request,")) // Request,read,X10,1,read,Y0,1,write,X0,1,0
             {
                 string[] commands = dataStr.Substring("Request,".Length).Split(',');
                 List<string> responseParts = new List<string>();
@@ -173,7 +173,7 @@ namespace TCPServer
                         break;
                     }
                 }
-                return string.Join(",", responseParts);
+                return string.Join(",", responseParts); // Read,X10,1,0,Read,Y0,1,0,Write,X0,1,0
             }
             else
             {
