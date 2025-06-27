@@ -132,10 +132,7 @@ public class AutomationController : MonoBehaviour
 
         while (elapsedTime < time)
         {
-            if (data.isGripperOn)
-                gripper.SetChild(true);
-            else
-                gripper.SetChild(false);
+            gripper.SetChild(data.isGripperOn);
 
             elapsedTime += Time.deltaTime;
 

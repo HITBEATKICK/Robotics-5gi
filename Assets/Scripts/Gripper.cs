@@ -4,6 +4,8 @@ public class Gripper : MonoBehaviour
 {
     public bool isObjectLocated = false;
     public Transform touchObj;
+    public Transform touchObj2;
+    Vector3 originPos;
     private void OnTriggerEnter(Collider other)
     {
         if(other.tag.Contains("금속") || other.tag.Contains("플라스틱"))
