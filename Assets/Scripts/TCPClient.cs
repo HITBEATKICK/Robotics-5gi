@@ -33,10 +33,10 @@ public class TCPClient : MonoBehaviour
     NetworkStream stream;
 
     [SerializeField] TMP_Text logTxt;
-    bool isConnected;
-    bool isPowerOnCliked;
-    bool isStopCliked;
-    bool isEStopCliked;
+    [SerializeField] bool isConnected;
+    [SerializeField] bool isPowerOnCliked;
+    [SerializeField] bool isStopCliked;
+    [SerializeField] bool isEStopCliked;
 
     const string X_START_UNITY2PLC = "X0";
     const string X_START_PLC2UNITY = "X10";
