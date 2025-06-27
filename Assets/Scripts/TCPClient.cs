@@ -232,7 +232,21 @@ public class TCPClient : MonoBehaviour
         char power = (isPowerOnCliked ? '1' : '0');
         char stop = (isStopCliked ? '1' : '0');
         char eStop = (isEStopCliked ? '1' : '0');
-        string binaryStr = $"{eStop}{stop}{power}";
+
+        char cylAFrontLS = (cylinders[0].isFrontEnd ? '1' : '0');
+        char cylABackLS  = (cylinders[0].isFrontEnd ? '0' : '1');
+
+        char cylBFrontLS = (cylinders[1].isFrontEnd ? '1' : '0');
+        char cylBBackLS  = (cylinders[1].isFrontEnd ? '0' : '1');
+
+        char cylCFrontLS = (cylinders[2].isFrontEnd ? '1' : '0');
+        char cylCBackLS  = (cylinders[2].isFrontEnd ? '0' : '1');
+
+        char cylDrontLS  = (cylinders[3].isFrontEnd ? '1' : '0');
+        char cylDBackLS  = (cylinders[3].isFrontEnd ? '0' : '1');
+
+        string binaryStr = $"{cylDBackLS}{cylDrontLS}{cylCBackLS}{cylCFrontLS}{cylBBackLS}{cylBFrontLS}{cylABackLS}{cylAFrontLS}" +
+            $"{eStop}{stop}{power}";
         int decimalX = Convert.ToInt32(binaryStr, 2);
         string writeX = $"write,{X_START_UNITY2PLC},{X_BLOCKCNT_UNITY2PLC},{decimalX}";
 
