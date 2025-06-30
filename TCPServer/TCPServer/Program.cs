@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Data;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using ActUtlType64Lib;
@@ -116,6 +117,8 @@ namespace TCPServer
                     Console.SetCursorPosition(0, 9);
                     Console.WriteLine($"클라이언트 연결 끊김: {ex.Message}".PadRight(Console.WindowWidth - 1));
                     Console.SetCursorPosition(0, SEND_LINE + 1); // 커서를 로그 아래로 이동
+
+                    Disconnect();
                 }
             }
             finally
@@ -142,7 +145,7 @@ namespace TCPServer
             {
                 return Disconnect(); // 이 함수가 mxComponent.Close()를 호출함
             }
-            else if (dataStr.StartsWith("Request,"))
+            else if (dataStr.StartsWith("Request,")) // Request,read,X10,1,read,Y0,1,write,X0,1,0
             {
                 string[] commands = dataStr.Substring("Request,".Length).Split(',');
                 List<string> responseParts = new List<string>();
@@ -173,7 +176,7 @@ namespace TCPServer
                         break;
                     }
                 }
-                return string.Join(",", responseParts);
+                return string.Join(",", responseParts); // Read,X10,1,0,Read,Y0,1,0,Write,X0,1,0
             }
             else
             {
@@ -224,6 +227,7 @@ namespace TCPServer
             if (iRet == 0)
             {
                 state = State.DISCONNECTED;
+
                 return "Disconnected";
             }
             else

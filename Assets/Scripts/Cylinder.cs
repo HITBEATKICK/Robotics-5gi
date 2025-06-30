@@ -117,6 +117,8 @@ public class Cylinder : MonoBehaviour
 
         if (_isFrontEnd == false)
         {
+            ChangeSWColor(backLimitSW, Color.black);
+
             while (true)
             {
                 print("작동중");
@@ -134,6 +136,8 @@ public class Cylinder : MonoBehaviour
 
                     isFrontEnd = true; // 필드, 멤버변수
 
+                    ChangeSWColor(frontLimitSW, Color.green);
+
                     break;
                 }
 
@@ -144,6 +148,8 @@ public class Cylinder : MonoBehaviour
         }
         else if (_isFrontEnd == true)
         {
+            ChangeSWColor(frontLimitSW, Color.black);
+
             while (true)
             {
                 print("작동중");
@@ -160,6 +166,8 @@ public class Cylinder : MonoBehaviour
                     isMoving = false;
 
                     isFrontEnd = false;
+
+                    ChangeSWColor(backLimitSW, Color.green);
 
                     break;
                 }

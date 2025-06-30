@@ -33,10 +33,10 @@ public class TCPClient : MonoBehaviour
     NetworkStream stream;
 
     [SerializeField] TMP_Text logTxt;
-    bool isConnected;
-    bool isPowerOnCliked;
-    bool isStopCliked;
-    bool isEStopCliked;
+    [SerializeField] bool isConnected;
+    [SerializeField] bool isPowerOnCliked;
+    [SerializeField] bool isStopCliked;
+    [SerializeField] bool isEStopCliked;
 
     const string X_START_UNITY2PLC = "X0";
     const string X_START_PLC2UNITY = "X10";
@@ -72,6 +72,7 @@ public class TCPClient : MonoBehaviour
 
         // 새로운 CancellationTokenSource와 Task를 생성
         _cts = new CancellationTokenSource();
+        // 데이터 전송용 스레드 시작
         _communicationTask = Task.Run(() => InitializeClient(_cts.Token));
     }
 
@@ -191,19 +192,20 @@ public class TCPClient : MonoBehaviour
             금속센서.isActive             = binaryX[9] == '1';
 
             // yDevice 정보 PLC -> UNITY
-            cylinders[0].isForward = binaryY[0] == '1';
-            cylinders[0].isBackward = binaryY[1] == '1';
-            cylinders[1].isForward = binaryY[2] == '1';
-            cylinders[1].isBackward = binaryY[3] == '1';
-            cylinders[2].isForward = binaryY[4] == '1';
-            cylinders[2].isBackward = binaryY[5] == '1';
-            cylinders[3].isForward = binaryY[6] == '1';
-            cylinders[3].isBackward = binaryY[7] == '1';
-            conveyor.isCW = binaryY[8] == '1';
-            conveyor.isCCW = binaryY[9] == '1';
-            towerManager.isRedLampOn = binaryY[10] == '1';
-            towerManager.isYellowLampOn = binaryY[11] == '1';
-            towerManager.isGreenLampOn = binaryY[12] == '1';
+            cylinders[0].isForward        = binaryY[0] == '1';
+            cylinders[0].isBackward       = binaryY[1] == '1';
+            cylinders[1].isForward        = binaryY[2] == '1';
+            cylinders[1].isBackward       = binaryY[3] == '1';
+            cylinders[2].isForward        = binaryY[4] == '1';
+            cylinders[2].isBackward       = binaryY[5] == '1';
+            cylinders[3].isForward        = binaryY[6] == '1';
+            cylinders[3].isBackward       = binaryY[7] == '1';
+            conveyor.isCW                 = binaryY[8] == '1';
+            conveyor.isCCW                = binaryY[9] == '1';
+            towerManager.isRedLampOn      = binaryY[10] == '1';
+            towerManager.isYellowLampOn   = binaryY[11] == '1';
+            towerManager.isGreenLampOn    = binaryY[12] == '1';
+            UIController.instance.isRobotOn   = binaryY[13] == '1';
         }
     }
 
@@ -230,7 +232,21 @@ public class TCPClient : MonoBehaviour
         char power = (isPowerOnCliked ? '1' : '0');
         char stop = (isStopCliked ? '1' : '0');
         char eStop = (isEStopCliked ? '1' : '0');
-        string binaryStr = $"{eStop}{stop}{power}";
+
+        char cylAFrontLS = (cylinders[0].isFrontEnd ? '1' : '0');
+        char cylABackLS  = (cylinders[0].isFrontEnd ? '0' : '1');
+
+        char cylBFrontLS = (cylinders[1].isFrontEnd ? '1' : '0');
+        char cylBBackLS  = (cylinders[1].isFrontEnd ? '0' : '1');
+
+        char cylCFrontLS = (cylinders[2].isFrontEnd ? '1' : '0');
+        char cylCBackLS  = (cylinders[2].isFrontEnd ? '0' : '1');
+
+        char cylDrontLS  = (cylinders[3].isFrontEnd ? '1' : '0');
+        char cylDBackLS  = (cylinders[3].isFrontEnd ? '0' : '1');
+
+        string binaryStr = $"{cylDBackLS}{cylDrontLS}{cylCBackLS}{cylCFrontLS}{cylBBackLS}{cylBFrontLS}{cylABackLS}{cylAFrontLS}" +
+            $"{eStop}{stop}{power}";
         int decimalX = Convert.ToInt32(binaryStr, 2);
         string writeX = $"write,{X_START_UNITY2PLC},{X_BLOCKCNT_UNITY2PLC},{decimalX}";
 
@@ -288,6 +304,8 @@ public class TCPClient : MonoBehaviour
                         if (_requestToSend == "Disconnect") _requestToSend = "";
                     }
                 }
+
+                // 송신 딜레이
                 await Task.Delay(50, token);
             }
         }
