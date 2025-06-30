@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "258026811997",
+    "project_id": "robotics-5gi-c2661",
+    "storage_bucket": "robotics-5gi-c2661.firebasestorage.app",
+    "firebase_url": "https://robotics-5gi-c2661-default-rtdb.asia-southeast1.firebasedatabase.app/"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258026811997:android:a7371b1718cf881304d3b4",
+        "android_client_info": {
+          "package_name": "com.DefaultCompany.ProgrammingStudy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCszR9ooctmekHB2fyHuzOqNkdwhTXqUuc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -68,3 +68,7 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Firebase Large File
+/[Aa]ssets/Firebase/Plugins/x86_64/FirebaseCppApp-12_10_1.bundle
+/[Aa]ssets/Firebase/Plugins/x86_64/FirebaseCppApp-12_10_1.so
