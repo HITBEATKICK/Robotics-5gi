@@ -5,12 +5,17 @@ using System.Threading.Tasks;
 using Firebase;
 using System.Net.Mail;
 using UnityEditor;
+using System.Collections;
 
 // 1. 로그인: 이메일, 패스워드 입력시 회원가입 여부에 따라 로그인
 // 2. 회원가입: 이메일, 패스워드 입력 후 이메일 인증이 된다면, 회원가입 완료!
 // 3. DB정보 불러오기: 권한에 따라 DB의 특정 정보를 가져온다.
 public class FirebaseAuthManager : MonoBehaviour
 {
+    public GameObject signInPanel;
+    public GameObject signUpPanel;
+    public GameObject verificationPanel;
+
     public TMP_InputField signInEmailInput;
     public TMP_InputField signInPasswordInput;
 
@@ -132,6 +137,8 @@ public class FirebaseAuthManager : MonoBehaviour
 
             user.SendEmailVerificationAsync().ContinueWith(task =>
             {
+                print(task.Exception);
+
                 if(task.IsCompleted)
                 {
                     print("이메일을 확인하여 인증을 끝마쳐 주세요.");
@@ -140,4 +147,115 @@ public class FirebaseAuthManager : MonoBehaviour
         });
     }
 
+    public void OnSignUpBtnClkEvent()
+    {
+        signInPanel.SetActive(false);
+        signUpPanel.SetActive(true);
+    }
+
+    public void OnSignUpOKBtnClkEvent()
+    {
+        StartCoroutine(SignUp(signUpEmailInput.text, signUpPasswordInput.text,
+            signUpPasswordCheckInput.text));
+    }
+
+    IEnumerator SignUp(string email, string password, string passwordCheck)
+    {
+        if(email == "" || password == "" || passwordCheck == "")
+        {
+            print("이메일 또는 패스워드를 입력해 주세요.");
+
+            yield break;
+        }
+
+        if(password != passwordCheck)
+        {
+            print("비밀번호와 확인비밀번호가 같지 않습니다. 다시 확인 후 진행해 주세요.");
+
+            yield break;
+        }
+
+        Task task = auth.CreateUserWithEmailAndPasswordAsync(email, password);
+
+        yield return new WaitUntil(() => task.IsCompleted == true);
+
+        if(task.Exception != null)
+        {
+            FirebaseException e = task.Exception.GetBaseException() as FirebaseException;
+            AuthError authError = (AuthError)e.ErrorCode;
+
+            switch(authError)
+            {
+                case AuthError.InvalidEmail:
+                    print("유효하지 않은 이메일 입니다.");
+                    yield break;
+                case AuthError.WeakPassword:
+                    print("비밀번호가 취약합니다.");
+                    yield break;
+                case AuthError.EmailAlreadyInUse:
+                    print("이미 사용중인 이메일 입니다.");
+                    yield break;
+            }
+        }
+
+        StartCoroutine(SendVerificationEmail(email));
+    }
+
+    IEnumerator SendVerificationEmail(string email)
+    {
+        user = auth.CurrentUser;
+        print(user.UserId);
+
+        if (user != null)
+        {
+            Task task = user.SendEmailVerificationAsync();
+
+            yield return new WaitUntil(() => task.IsCompleted == true);
+
+            if (task.Exception != null)
+            {
+                FirebaseException e = task.Exception.GetBaseException() as FirebaseException;
+                AuthError authError = (AuthError)e.ErrorCode;
+                print(authError);
+            }
+
+            verificationPanel.SetActive(true);
+            print($"인증메일을 {email}로 보냈습니다. 메일을 확인해 주세요.");
+
+            yield return new WaitForSeconds(3);
+
+            signInPanel.SetActive(true);
+            signUpPanel.SetActive(false);
+            verificationPanel.SetActive(false);
+        }
+    }
+
+    public void OnSignInOKBtnClkEvent()
+    {
+        StartCoroutine(SignIn(signInEmailInput.text, signInPasswordInput.text));
+    }
+
+    IEnumerator SignIn(string email, string password)
+    {
+        if(email == "" || password == "")
+        {
+            print("이메일 또는 패스워드를 입력해 주세요.");
+        }
+
+        Task task = auth.SignInWithEmailAndPasswordAsync(email, password);
+
+        yield return new WaitUntil(() => task.IsCompleted == true);
+
+        user = auth.CurrentUser;
+
+        if(user.IsEmailVerified)
+        {
+            print("로그인이 완료되었습니다.");
+            signInPanel.SetActive(false);
+        }
+        else
+        {
+            print("이메일이 인증되지 않았습니다. 이메일 인증 후 다시 로그인 해주세요.");
+        }
+    }
 }
