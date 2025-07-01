@@ -69,6 +69,7 @@
     <Compile Include="Assets\Scripts\Sensor.cs" />
     <Compile Include="Assets\Scripts\AudioManager.cs" />
     <Compile Include="Assets\IK_toolkit\Scripts\AutomationController.cs" />
+    <Compile Include="Assets\Scripts\BulletinBoardManager.cs" />
     <Compile Include="Assets\IK_toolkit\Scripts\UIController.cs" />
     <Compile Include="Assets\Scripts\TCPClient.cs" />
     <Compile Include="Assets\Scripts\LibrarySystem.cs" />

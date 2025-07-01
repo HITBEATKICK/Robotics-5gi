@@ -340,7 +340,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1109353750}
         m_TargetAssemblyTypeName: FirebaseAuthManager, Assembly-CSharp
-        m_MethodName: SignIn
+        m_MethodName: OnSignInOKBtnClkEvent
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

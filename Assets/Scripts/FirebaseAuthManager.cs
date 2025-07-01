@@ -3,8 +3,6 @@ using Firebase.Auth;
 using TMPro;
 using System.Threading.Tasks;
 using Firebase;
-using System.Net.Mail;
-using UnityEditor;
 using System.Collections;
 
 // 1. 로그인: 이메일, 패스워드 입력시 회원가입 여부에 따라 로그인
@@ -12,9 +10,14 @@ using System.Collections;
 // 3. DB정보 불러오기: 권한에 따라 DB의 특정 정보를 가져온다.
 public class FirebaseAuthManager : MonoBehaviour
 {
+    public static FirebaseAuthManager instance;
+
+
     public GameObject signInPanel;
     public GameObject signUpPanel;
     public GameObject verificationPanel;
+    public GameObject bulletinBoard;
+    public GameObject bulletinBoardPanel;
 
     public TMP_InputField signInEmailInput;
     public TMP_InputField signInPasswordInput;
@@ -29,8 +32,13 @@ public class FirebaseAuthManager : MonoBehaviour
     // + SignUp(회원가입)
     // + SendVerificationEmail(이메일인증)
     FirebaseAuth auth;
-    FirebaseUser user;
+    public FirebaseUser user;
 
+    private void Awake()
+    {
+        if (instance == null)
+            instance = this;
+    }
     private void Start()
     {
         Initialize();
@@ -252,6 +260,9 @@ public class FirebaseAuthManager : MonoBehaviour
         {
             print("로그인이 완료되었습니다.");
             signInPanel.SetActive(false);
+
+            bulletinBoardPanel.SetActive(true);
+            bulletinBoard.SetActive(true);
         }
         else
         {
