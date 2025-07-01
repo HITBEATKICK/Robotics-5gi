@@ -64,6 +64,7 @@
     <Compile Include="Assets\Scripts\SlerpRotation.cs" />
     <Compile Include="Assets\Scripts\CubeManager1.cs" />
     <Compile Include="Assets\Scripts\FirebaseDBEx.cs" />
+    <Compile Include="Assets\Scripts\FirebaseAuthManager.cs" />
     <Compile Include="Assets\Scripts\CubeManager.cs" />
     <Compile Include="Assets\Scripts\Sensor.cs" />
     <Compile Include="Assets\Scripts\AudioManager.cs" />

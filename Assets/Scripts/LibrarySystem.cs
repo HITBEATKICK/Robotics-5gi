@@ -99,8 +99,8 @@ public class LibrarySystem : MonoBehaviour
                 books = JsonConvert.DeserializeObject<List<Book>>(json);
 
                 var bookFound = from item in books
-                            where item.name == searchInput.text
-                            select item;
+                                where item.name == searchInput.text
+                                select item;
 
                 print("Book is found!");
                 string result = "";

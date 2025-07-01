@@ -66,19 +66,24 @@ public class FirebaseDBEx : MonoBehaviour
         //dbRef.SetValueAsync(json);          // 문자열 자체를 넣기
         //dbRef.SetRawJsonValueAsync(json).ContinueWith(task =>
         //{
-        //    if(task.IsCanceled)
+        //    if (task.IsCanceled)
         //    {
         //        print("데이터 설정 취소");
         //    }
-        //    else if(task.IsFaulted)
+        //    else if (task.IsFaulted)
         //    {
         //        print("데이터 설정 실패");
         //    }
-        //    else if(task.IsCompleted)
+        //    else if (task.IsCompleted)
         //    {
         //        print("데이터 설정 완료");
         //    }
         //});   // json 파일 포멧으로 넣기
+
+        dbRef.Child("Books").GetValueAsync().ContinueWith(task =>
+        {
+
+        });
 
         // 객체(object) -> Json 포멧 변경
         SetDBRobotData(dbRef);
@@ -105,7 +110,6 @@ public class FirebaseDBEx : MonoBehaviour
 
                 string json = snapShot.GetRawJsonValue();
 
-                
                 factory = JsonConvert.DeserializeObject<Factory>(json);
             }
         });

@@ -1098,7 +1098,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dbURL: https://robotics-5gi-c2661-default-rtdb.asia-southeast1.firebasedatabase.app/
   factory:
-    robots: []
+    robots:
+    - name: 
+      id: 0
+      serialNum: 
+      managerName: 
+      cycleTime: 0
+      steps: []
 --- !u!4 &681253393
 Transform:
   m_ObjectHideFlags: 0
